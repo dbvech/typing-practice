@@ -13,12 +13,18 @@ export default function Dashboard(_: RouteComponentProps) {
   const currentUser = useCurrentUser();
   const [users, onUserUpdates] = useUsers();
 
+  if (!currentUser) {
+    return null;
+  }
+
   const columns = [
     {
       title: "Name",
       dataIndex: "name",
       key: "name",
-      render: (name: string) => <Name name={name} />,
+      render: (name: string, user: User) => (
+        <Name name={name} isCurrentUser={user.id === currentUser.id} />
+      ),
     },
     {
       title: "Role",

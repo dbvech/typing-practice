@@ -25,6 +25,18 @@ export default class UserService {
     return import("../mocks/users.json");
   }
 
+  async getUserByEmailAndPassword(email: string, password: string) {
+    const response = await this.fetch();
+    const user = response.default.find((u: any) => u && u.email === email);
+
+    if (!user || user.password !== password) {
+      throw new Error("User not found");
+    }
+
+    const User = this.getConstructorByRole(user.role);
+    return User.from(user);
+  }
+
   async updateUserRole<R extends Role>(
     user: Readonly<RoleToUser[R]>,
     newRole: R
@@ -34,14 +46,38 @@ export default class UserService {
     return this.users;
   }
 
-  getAvailableOperations(user: User, currenUser: User): Operation[] {
-    // Вам нужно поменять логику внутри getAvailableOperations для того, что бы это работало с логином
-    throw new Error("Not Implemented")
-    // if (user instanceof Admin || user instanceof Client) {
-    //   return [Operation.UPDATE_TO_MODERATOR];
-    // }
+  getAvailableOperations(user: User, currentUser: User): Operation[] {
+    if (!user || !currentUser || user.id === currentUser.id) {
+      return [];
+    }
 
-    // return [Operation.UPDATE_TO_CLIENT, Operation.UPDATE_TO_ADMIN];
+    const getAdminOperations = () => {
+      if (user instanceof Admin || user instanceof Client) {
+        return [Operation.UPDATE_TO_MODERATOR];
+      }
+
+      return [Operation.UPDATE_TO_CLIENT, Operation.UPDATE_TO_ADMIN];
+    };
+
+    const getModeratorOperations = () => {
+      if (user instanceof Client) {
+        return [Operation.UPDATE_TO_MODERATOR];
+      }
+      if (user instanceof Moderator) {
+        return [Operation.UPDATE_TO_CLIENT];
+      }
+      return [];
+    };
+
+    if (currentUser instanceof Admin) {
+      return getAdminOperations();
+    }
+
+    if (currentUser instanceof Moderator) {
+      return getModeratorOperations();
+    }
+
+    return [];
   }
 
   getConstructorByRole(role: Role) {

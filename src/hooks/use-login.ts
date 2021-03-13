@@ -21,7 +21,7 @@ export default function useLogin(credentials: Credentials | null): User | null {
       .then((user: User) => dispatch!({ type: LogedInActionType.LOG_IN, payload: user }))
       .then(() => navigate("/"))
       .catch(e => alert(e.message));
-  }, [credentials, dispatch]);
+  }, [credentials, dispatch, loginService]);
 
   return state.user;
 }
