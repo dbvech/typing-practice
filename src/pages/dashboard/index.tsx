@@ -23,7 +23,9 @@ export default function Dashboard(_: RouteComponentProps) {
       dataIndex: "name",
       key: "name",
       render: (name: string, user: User) => (
-        <Name name={name} isCurrentUser={user.id === currentUser.id} />
+        <Name
+          name={`${name} ${user.id === currentUser.id ? "(It's you)" : ""}`}
+        />
       ),
     },
     {
