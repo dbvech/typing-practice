@@ -1,10 +1,13 @@
-import { Client } from "../entities/client";
 import UserService from "./user-service";
+
+import type { User } from "../entities/user";
+import type { Email } from "../entities/email";
+import type { Password } from "../entities/password";
 
 export default class LoginService {
   constructor(private readonly userService: UserService) {}
 
-  public async login(email: string, password: string): Promise<any> {
+  public async login(email: Email, password: Password): Promise<User> {
     let user;
 
     try {
@@ -12,16 +15,6 @@ export default class LoginService {
     } catch (err) {
       throw new Error("Bad credentials");
     }
-
-    if (user instanceof Client) {
-      throw new Error("Unauthorized");
-    }
-
-    // const permissions = this.userService.getUserPermissions(user);
-
-    // if (!permissions?.dashboardAccess) {
-    //   throw new Error("Unauthorized");
-    // }
 
     return user;
   }

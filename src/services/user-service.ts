@@ -2,9 +2,11 @@ import { Role } from "../entities/role";
 import { Admin } from "../entities/admin";
 import { Client } from "../entities/client";
 import { Moderator } from "../entities/moderator";
-import { Operation } from "../entities/operation";
 import type { User } from "../entities/user";
 import type { RoleToUser } from "../entities/role-to-user";
+import type { Email } from "../entities/email";
+import type { Password } from "../entities/password";
+import { PERMISSIONS_BY_ROLE } from "../entities/permissions-by-role";
 
 export default class UserService {
   private users: readonly User[] = [];
@@ -25,11 +27,13 @@ export default class UserService {
     return import("../mocks/users.json");
   }
 
-  async getUserByEmailAndPassword(email: string, password: string) {
+  async getUserByEmailAndPassword(email: Email, password: Password) {
     const response = await this.fetch();
-    const user = response.default.find((u: any) => u && u.email === email);
+    const user = response.default.find(
+      (u: any) => u && u.email === email.value
+    );
 
-    if (!user || user.password !== password) {
+    if (!user || user.password !== password.value) {
       throw new Error("User not found");
     }
 
@@ -46,38 +50,16 @@ export default class UserService {
     return this.users;
   }
 
-  getAvailableOperations(user: User, currentUser: User): Operation[] {
-    if (!user || !currentUser || user.id === currentUser.id) {
-      return [];
-    }
+  getUserPermissions<R extends Role>(user: User & { role: R }) {
+    return PERMISSIONS_BY_ROLE[user.role];
+  }
 
-    const getAdminOperations = () => {
-      if (user instanceof Admin || user instanceof Client) {
-        return [Operation.UPDATE_TO_MODERATOR];
-      }
-
-      return [Operation.UPDATE_TO_CLIENT, Operation.UPDATE_TO_ADMIN];
-    };
-
-    const getModeratorOperations = () => {
-      if (user instanceof Client) {
-        return [Operation.UPDATE_TO_MODERATOR];
-      }
-      if (user instanceof Moderator) {
-        return [Operation.UPDATE_TO_CLIENT];
-      }
-      return [];
-    };
-
-    if (currentUser instanceof Admin) {
-      return getAdminOperations();
-    }
-
-    if (currentUser instanceof Moderator) {
-      return getModeratorOperations();
-    }
-
-    return [];
+  getAvailableOperations<R1 extends Role, R2 extends Role>(
+    user: Readonly<User & { role: R1 }>,
+    currentUser: User & { role: R2 }
+  ) {
+    const permissions = this.getUserPermissions<R2>(currentUser);
+    return permissions.operations[user.role];
   }
 
   getConstructorByRole(role: Role) {

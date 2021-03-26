@@ -1,3 +1,6 @@
+import type { RouteComponentProps } from "@reach/router";
+import { Table, Breadcrumb } from "antd";
+
 import "./styles.css";
 import Page from "../base";
 import Name from "./name";
@@ -5,12 +8,12 @@ import Role from "./role";
 import Actions from "./actions";
 import useUsers from "../../hooks/use-users";
 import useCurrentUser from "../../hooks/use-current-user";
-import { Table, Breadcrumb } from "antd";
+import useCurrentUserPermissions from "../../hooks/use-current-user-permissions";
 import type { User } from "../../entities/user";
-import type { RouteComponentProps } from "@reach/router";
 
 export default function Dashboard(_: RouteComponentProps) {
   const currentUser = useCurrentUser();
+  const currentUserPermissions = useCurrentUserPermissions();
   const [users, onUserUpdates] = useUsers();
 
   if (!currentUser) {
@@ -53,7 +56,9 @@ export default function Dashboard(_: RouteComponentProps) {
         <Breadcrumb.Item>Dashboard</Breadcrumb.Item>
       </Breadcrumb>
       <div className="site-layout-background content-container">
-        <Table rowKey="id" columns={columns} dataSource={users} />
+        {currentUserPermissions.dashboard && (
+          <Table rowKey="id" columns={columns} dataSource={users} />
+        )}
       </div>
     </Page>
   );

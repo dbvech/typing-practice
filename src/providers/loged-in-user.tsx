@@ -1,6 +1,7 @@
 import { createContext, useReducer } from "react";
 import type { User } from "../entities/user";
 import type { ReactChild } from "react";
+import { UserPermissions } from "../entities/permissions-by-role";
 
 export enum LogedInActionType {
   LOG_IN = "log in",
@@ -8,7 +9,7 @@ export enum LogedInActionType {
 
 type LogedInAction = {
   type: LogedInActionType.LOG_IN;
-  payload: User;
+  payload: { user: User; permissions: UserPermissions };
 };
 
 type LogedInProviderProps = {
@@ -17,6 +18,7 @@ type LogedInProviderProps = {
 
 type LogedInUserState = {
   user: User | null;
+  permissions: UserPermissions | null;
 };
 
 type LogedInProviderContext = {
@@ -26,6 +28,7 @@ type LogedInProviderContext = {
 
 const initialState = {
   user: null,
+  permissions: null,
 };
 
 export const LogedInUser = createContext<LogedInProviderContext>({});
@@ -33,7 +36,11 @@ export const LogedInUser = createContext<LogedInProviderContext>({});
 function logedInReducer(state: LogedInUserState, action: LogedInAction) {
   switch (action.type) {
     case LogedInActionType.LOG_IN:
-      return { ...state, user: action.payload };
+      return {
+        ...state,
+        user: action.payload.user,
+        permissions: action.payload.permissions,
+      };
     default:
       return state;
   }
