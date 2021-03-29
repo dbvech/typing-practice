@@ -6,7 +6,7 @@ import type { User } from "../entities/user";
 import type { RoleToUser } from "../entities/role-to-user";
 import type { Email } from "../entities/email";
 import type { Password } from "../entities/password";
-import { PERMISSIONS_BY_ROLE } from "../entities/permissions-by-role";
+import { PERMISSIONS_BY_ROLE, PERMISSIONS_BY_ROLE_TYPE } from "../entities/permissions-by-role";
 
 export default class UserService {
   private users: readonly User[] = [];
@@ -57,7 +57,7 @@ export default class UserService {
   getAvailableOperations<R1 extends Role, R2 extends Role>(
     user: Readonly<User & { role: R1 }>,
     currentUser: User & { role: R2 }
-  ) {
+  ): PERMISSIONS_BY_ROLE_TYPE[R2]["operations"][R1] {
     const permissions = this.getUserPermissions<R2>(currentUser);
     return permissions.operations[user.role];
   }
