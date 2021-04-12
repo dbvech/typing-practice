@@ -1,12 +1,13 @@
 import { Role } from "../entities/role";
-import { Admin } from "../entities/admin";
-import { Client } from "../entities/client";
-import { Moderator } from "../entities/moderator";
-import type { User } from "../entities/user";
+import { User } from "../entities/user";
+import { castTo } from "../entities/role-to-user";
 import type { RoleToUser } from "../entities/role-to-user";
 import type { Email } from "../entities/email";
 import type { Password } from "../entities/password";
-import { PERMISSIONS_BY_ROLE, PERMISSIONS_BY_ROLE_TYPE } from "../entities/permissions-by-role";
+import {
+  PERMISSIONS_BY_ROLE,
+  PERMISSIONS_BY_ROLE_TYPE,
+} from "../entities/permissions-by-role";
 
 export default class UserService {
   private users: readonly User[] = [];
@@ -16,10 +17,7 @@ export default class UserService {
       return this.users;
     }
     const response = await this.fetch();
-    this.users = response.default.map((u: any) => {
-      const User = this.getConstructorByRole(u.role);
-      return User.from(u);
-    });
+    this.users = response.default.map((u: any) => User.check(u));
     return this.users;
   }
 
@@ -29,24 +27,18 @@ export default class UserService {
 
   async getUserByEmailAndPassword(email: Email, password: Password) {
     const response = await this.fetch();
-    const user = response.default.find(
-      (u: any) => u && u.email === email.value
-    );
+    const user = response.default.find((u: any) => u && u.email === email);
 
-    if (!user || user.password !== password.value) {
+    if (!user || user.password !== password) {
       throw new Error("User not found");
     }
 
-    const User = this.getConstructorByRole(user.role);
-    return User.from(user);
+    return User.check(user);
   }
 
-  async updateUserRole<R extends Role>(
-    user: Readonly<RoleToUser[R]>,
-    newRole: R
-  ) {
-    const User = this.getConstructorByRole(newRole);
-    this.users = this.users.map((u) => (u.id === user.id ? User.from(u) : u));
+  async updateUserRole<R extends Role>(user: RoleToUser[R], newRole: R) {
+    const newUser = castTo(newRole, user);
+    this.users = this.users.map((u) => (u.id === user.id ? newUser : u));
     return this.users;
   }
 
@@ -60,16 +52,5 @@ export default class UserService {
   ): PERMISSIONS_BY_ROLE_TYPE[R2]["operations"][R1] {
     const permissions = this.getUserPermissions<R2>(currentUser);
     return permissions.operations[user.role];
-  }
-
-  getConstructorByRole(role: Role) {
-    switch (role) {
-      case Role.ADMIN:
-        return Admin;
-      case Role.CLIENT:
-        return Client;
-      case Role.MODERATOR:
-        return Moderator;
-    }
   }
 }

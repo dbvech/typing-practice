@@ -1,16 +1,12 @@
-export class Password {
-  private readonly _type = Symbol("Password");
-  protected constructor(public readonly value: string) {}
+import * as t from "runtypes";
 
-  static from(password: any): Password {
-    if (Password.isValid(password)) {
-      return new Password(password);
-    }
-    throw new TypeError("Password is invalid");
-  }
+const isValidPassword = (password: any) => {
+  const regExp = /^\S{3,}$/;
+  return typeof password === "string" && regExp.test(password);
+};
 
-  static isValid(password: any) {
-    const regExp = /^\S{3,}$/;
-    return typeof password === "string" && regExp.test(password);
-  }
-}
+export const Password = t.String.withConstraint(
+  (email) => isValidPassword(email) || "Password is invalid"
+).withBrand("Password");
+
+export type Password = t.Static<typeof Password>;

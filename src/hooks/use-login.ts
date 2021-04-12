@@ -19,8 +19,18 @@ export default function useLogin(credentials: Credentials | null): User | null {
     if (!credentials || !dispatch) {
       return;
     }
+
+    let email, password;
+
+    try {
+      email = Email.check(credentials.email);
+      password = Password.check(credentials.password);
+    } catch (e) {
+      return alert(e.message);
+    }
+
     loginService
-      .login(Email.from(credentials.email), Password.from(credentials.password))
+      .login(email, password)
       .then((user: User) =>
         dispatch!({
           type: LogedInActionType.LOG_IN,
