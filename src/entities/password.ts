@@ -1,8 +1,8 @@
 import * as t from "runtypes";
 
-const isValidPassword = (password: any) => {
+const isValidPassword = (password: string) => {
   const regExp = /^\S{3,}$/;
-  return typeof password === "string" && regExp.test(password);
+  return regExp.test(password);
 };
 
 export const Password = t.String.withConstraint(
